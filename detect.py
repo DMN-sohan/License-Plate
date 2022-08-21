@@ -134,7 +134,7 @@ def detect(save_img=False):
                                 filepath=os.path.join(r'results/', filename)
 
                                 text = pytesseract.image_to_string(crop_img)
-                                print(text)
+                                print(filename,text)
                                 with open(r"predictions.txt",'a') as f:
                                     f.writelines([f"{filename} : {text}\n"])
 
