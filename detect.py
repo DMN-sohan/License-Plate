@@ -16,6 +16,7 @@ from utils.general import check_img_size, check_requirements, check_imshow, non_
 from utils.plots import plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_synchronized
 
+import pytesseract
 
 def detect(save_img=False):
     source, weights, view_img, save_txt, imgsz = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
@@ -83,6 +84,10 @@ def detect(save_img=False):
 
         # Process detections
         for i, det in enumerate(pred):  # detections per image
+            
+            _4 = 0
+            _2 = 0
+            
             if webcam:  # batch_size >= 1
                 p, s, im0, frame = path[i], '%g: ' % i, im0s[i].copy(), dataset.count
             else:
@@ -104,6 +109,7 @@ def detect(save_img=False):
 
                 # Write results
                  # Write results
+
                 for *xyxy, conf, cls in det:
                     if save_txt:  # Write to file
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
@@ -116,16 +122,28 @@ def detect(save_img=False):
                     
                     save_obj = True
                     if save_obj:
-                        for k in range(len(det)):
-                            x,y,w,h=int(xyxy[0]), int(xyxy[1]), int(xyxy[2] - xyxy[0]), int(xyxy[3] - xyxy[1])                   
-                            img_ = im0.astype(np.uint8)
-                            crop_img=img_[y:y+ h, x:x + w]                          
+                        if int(cls) == 8:
+                            for k in range(len(det)):
+                                x,y,w,h=int(xyxy[0]), int(xyxy[1]), int(xyxy[2] - xyxy[0]), int(xyxy[3] - xyxy[1])                   
+                                img_ = im0.astype(np.uint8)
+                                crop_img=img_[y:y+ h, x:x + w]                          
+
+                                #!!rescale image !!!
+                                filename=p.name
+                                filepath=os.path.join(r'test_images/results/', filename)
+                                print(filepath)
+
+                                text = pytesseract.image_to_string(filepath)
+                                print(text)
+                                with open(r"test_images/results/predictions.txt",'a') as f:
+                                    f.writelines([f"{text}\n"])
+
+                                cv2.imwrite(filepath, crop_img) 
                                 
-                            #!!rescale image !!!
-                            filename=p.name
-                            filepath=os.path.join(r'test_images/results/', filename)
-                            print(filepath)
-                            cv2.imwrite(filepath, crop_img) 
+                        elif int(cls) == 3:
+                            _4 += 1
+                        elif int(cls) == 4:
+                            _2 += 1
                             
                         else:
                             print("There is no detected object")
@@ -156,11 +174,14 @@ def detect(save_img=False):
                         vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*fourcc), fps, (w, h))
                     vid_writer.write(im0)
 
-    if save_txt or save_img:
-        s = f"\n{len(list(save_dir.glob('labels/*.txt')))} labels saved to {save_dir / 'labels'}" if save_txt else ''
-        print(f"Results saved to {save_dir}{s}")
+            if save_txt or save_img:
+                s = f"\n{len(list(save_dir.glob('labels/*.txt')))} labels saved to {save_dir / 'labels'}" if save_txt else ''
+                print(f"Results saved to {save_dir}{s}")
+            
+            with open(r"test_images/results/predictions.txt",'a') as f:
+                f.writelines([f"No. of 4 wheelers : {_4}\nNo. of 2 wheelers : {_2}"])
 
-    print(f'Done. ({time.time() - t0:.3f}s)')
+            print(f'Done. ({time.time() - t0:.3f}s)')
 
 
 if __name__ == '__main__':
