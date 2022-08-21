@@ -136,7 +136,34 @@ def detect(save_img=False):
                                 filename=p.name
                                 filepath=os.path.join(r'results/', filename)
 
-                                text = pytesseract.image_to_string(crop_img)
+                                        
+                                def filter(image):
+    
+                                    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                                    gray = cv2.bitwise_not(gray)
+
+                                    thresh = cv2.threshold(gray, 0, 255,
+                                        cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+
+                                    coords = np.column_stack(np.where(thresh > 0))
+                                    angle = cv2.minAreaRect(coords)[-1]
+
+                                    if angle < -45:
+                                        angle = -(90 + angle)
+
+                                    else:
+                                        angle = -angle
+
+                                    (h, w) = image.shape[:2]
+                                    center = (w // 2, h // 2)
+                                    M = cv2.getRotationMatrix2D(center, angle, 1.0)
+                                    rotated = cv2.warpAffine(image, M, (w, h),
+                                        flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+
+                                    cv2.waitKey(0)
+                                    return rotated
+                                
+                                text = pytesseract.image_to_string(filter(crop_img))
                                 print(f"filename : {filename}")
                                 if text != "" or len(text) <= 0 or text != None or last_filename[0] != filename:
                                     print(f"{filename} : {text}")
@@ -144,7 +171,6 @@ def detect(save_img=False):
                                         last_filename[0] = filename
                                         print(f"last : {last_filename[0]}")
                                         f.writelines([f"{filename} : {text}\n"])
-                                        
 
                                 cv2.imwrite(filepath, crop_img) 
                                 
