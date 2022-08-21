@@ -19,6 +19,7 @@ from utils.torch_utils import select_device, load_classifier, time_synchronized
 import pytesseract
 
 data = {4:0,2:0}
+last_filename = {0:None}
 
 def detect(save_img=False):
     source, weights, view_img, save_txt, imgsz = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
@@ -121,6 +122,8 @@ def detect(save_img=False):
                         label = '%s %.2f' % (names[int(cls)], conf)
                         plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
                     
+                    
+
                     save_obj = True
                     if save_obj:
                         if int(cls) == 2:
@@ -134,11 +137,14 @@ def detect(save_img=False):
                                 filepath=os.path.join(r'results/', filename)
 
                                 text = pytesseract.image_to_string(crop_img)
-                                
-                                if text != "" or text != None:
-                                    print(filename,text)
+                                print(f"filename : {filename}")
+                                if text != "" or len(text) <= 0 or text != None or last_filename[0] != filename:
+                                    print(f"{filename} : {text}")
                                     with open(r"predictions.txt",'a') as f:
+                                        last_filename[0] = filename
+                                        print(f"last : {last_filename[0]}")
                                         f.writelines([f"{filename} : {text}\n"])
+                                        
 
                                 cv2.imwrite(filepath, crop_img) 
                                 
