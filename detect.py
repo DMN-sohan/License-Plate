@@ -122,7 +122,7 @@ def detect(save_img=False):
                     
                     save_obj = True
                     if save_obj:
-                        if int(cls) == 8:
+                        if int(cls) == 2:
                             for k in range(len(det)):
                                 x,y,w,h=int(xyxy[0]), int(xyxy[1]), int(xyxy[2] - xyxy[0]), int(xyxy[3] - xyxy[1])                   
                                 img_ = im0.astype(np.uint8)
@@ -140,9 +140,9 @@ def detect(save_img=False):
 
                                 cv2.imwrite(filepath, crop_img) 
                                 
-                        elif int(cls) == 3:
+                        elif int(cls) == 0:
                             _4 += 1
-                        elif int(cls) == 4:
+                        elif int(cls) == 1:
                             _2 += 1
                             
                         else:
